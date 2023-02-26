@@ -1,0 +1,75 @@
+"Asm.fif" include
+// automatically generated from `/home/user/.config/toncli/func-libs/stdlib.func` `/mnt/c/Users/user/Documents/internal_highload/func/code.func` 
+PROGRAM{
+  DECLPROC recv_internal
+  DECLPROC recv_external
+  80293 DECLMETHOD get_owner
+  recv_internal PROC:<{
+    //  my_balance msg_value in_msg_full in_msg_body
+    s3 POP
+    NIP	//  in_msg_body in_msg_full
+    CTOS	//  in_msg_body cs
+    4 LDU	//  in_msg_body flags cs
+    SWAP
+    1 PUSHINT	//  in_msg_body cs flags _10=1
+    AND	//  in_msg_body cs _11
+    IFJMP:<{	//  in_msg_body cs
+      2DROP	// 
+    }>	//  in_msg_body cs
+    LDMSGADDR	//  in_msg_body _55 _54
+    DROP	//  in_msg_body sender_addr
+    c4 PUSH	//  in_msg_body sender_addr _16
+    CTOS	//  in_msg_body sender_addr cs_body
+    LDMSGADDR	//  in_msg_body sender_addr owner cs_body
+    ENDS
+    s1 s(-1) PUXC	//  in_msg_body sender_addr sender_addr owner
+    SDEQ	//  in_msg_body sender_addr _23
+    MYADDR	//  in_msg_body sender_addr _23 _24
+    s1 s2 XCHG	//  in_msg_body _23 sender_addr _24
+    SDEQ	//  in_msg_body _23 _25
+    OR	//  in_msg_body _26
+    403 THROWIFNOT
+    32 LDU	//  op in_msg_body
+    SWAP
+    3405691582 PUSHINT	//  in_msg_body op _32=3405691582
+    EQUAL	//  in_msg_body _33
+    IF:<{	//  in_msg_body
+      LDDICT	//  dict in_msg_body
+      ENDS
+      -1 PUSHINT	//  dict i=-1
+      UNTIL:<{
+        OVER
+        16 PUSHINT	//  dict i dict _42=16
+        DICTIGETNEXT
+        NULLSWAPIFNOT2	//  dict cs i f
+        DUP	//  dict cs i f f
+        IF:<{	//  dict cs i f
+          s0 s2 XCHG	//  dict f i cs
+          8 LDU	//  dict f i mode cs
+          LDREF	//  dict f i mode _68 _67
+          DROP	//  dict f i mode _48
+          SWAP	//  dict f i _48 mode
+          SENDRAWMSG
+        }>ELSE<{
+          s2 POP	//  dict f i
+        }>
+        SWAP	//  dict i f
+        NOT	//  dict i _51
+      }>	//  dict i
+      2DROP	// 
+    }>ELSE<{
+      DROP	// 
+    }>
+  }>
+  recv_external PROC:<{
+    //  in_msg
+    DROP	// 
+  }>
+  get_owner PROC:<{
+    // 
+    c4 PUSH	//  _1
+    CTOS	//  cs
+    LDMSGADDR	//  _6 _5
+    DROP	//  _3
+  }>
+}END>c

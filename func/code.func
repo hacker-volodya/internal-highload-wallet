@@ -1,0 +1,45 @@
+;; Heavy-duty wallet for mass transfers (e.g., for cryptocurrency exchanges)
+;; accepts orders for up to 254 internal messages (transfers) in one internal message
+
+int slice_data_equal?(slice s1, slice s2) asm "SDEQ";
+
+() recv_internal(int my_balance, int msg_value, cell in_msg_full, slice in_msg_body) impure {
+    slice cs = in_msg_full.begin_parse();
+    int flags = cs~load_uint(4);
+    if (flags & 1) { ;; ignore all bounced messages
+        return ();
+    }
+    slice sender_addr = cs~load_msg_addr();
+    slice cs_body = get_data().begin_parse();
+    slice owner = cs_body~load_msg_addr();
+    cs_body.end_parse();
+
+    ;; only owner is allowed to use wallet
+    ;; also it is possible to do recursive calls to wallet to increase action limit
+    throw_unless(403, (slice_data_equal?(sender_addr, owner) | slice_data_equal?(sender_addr, my_address())));
+
+    int op = in_msg_body~load_uint(32);
+    if (op == 0xcafebabe) {
+        var dict = in_msg_body~load_dict();
+        in_msg_body.end_parse();
+        int i = -1;
+        do {
+            (i, var cs, var f) = dict.idict_get_next?(16, i);
+            if (f) {
+                var mode = cs~load_uint(8);
+                send_raw_message(cs~load_ref(), mode);
+            }
+        } until (~ f);
+    }
+}
+
+() recv_external(slice in_msg) impure {
+}
+
+;; Get methods
+
+slice get_owner() method_id {
+    slice cs = get_data().begin_parse();
+    return cs~load_msg_addr();
+}
+

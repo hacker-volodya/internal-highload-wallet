@@ -1,0 +1,47 @@
+"TonUtil.fif" include
+"GetOpt.fif" include
+
+true =: allow-bounce
+false =: force-bounce
+3 =: send-mode  // mode for SENDRAWMSG: +1 - sender pays fees, +2 - ignore errors
+
+variable orders   dictnew orders !
+variable order#   order# 0!
+// c --
+{ <s order# @ dup 254 >= abort"more than 254 orders"
+  orders @ 16 udict!+ not abort"cannot add order to dictionary"
+  orders ! order# 1+!
+} : add-order
+// b body -- b'
+{ tuck <s 2dup 1 s-fits-with? not rot over 1 i, -rot
+  { drop swap ref, } { s, nip } cond
+} : append-msg-body
+// ng wc addr bounce body -- c
+{ <b b{01} s, rot 1 i, b{000100} s, 2swap addr, rot Gram,
+  0 9 64 32 + + 1+ u, swap append-msg-body b>
+} : create-int-msg
+// ng wc addr bnc --
+{ ."Transferring " 3 roll .GR ."to account "
+  -rot 2dup 4 pick 7 + .Addr ." = " .addr ." bounce=" . cr
+} : .transfer
+// addr$ ng -- c
+{ swap parse-smc-addr force-bounce or allow-bounce and  // ng wc addr bnc
+  2over 2over .transfer
+  <b 0 32 u, b> create-int-msg
+} : create-simple-transfer
+// c m -- c'
+{ <b swap 8 u, swap ref, b> } : create-order
+
+// addr$ ng --
+{ create-simple-transfer send-mode create-order add-order } : send
+{ bl word bl word $>GR send } : SEND
+
+// parse order file
+SEND kQAJnMiLjtigazazggnR8Ed5r_imG_yHbD6hpxXNjaP_PrNG 0.1
+SEND kQAJnMiLjtigazazggnR8Ed5r_imG_yHbD6hpxXNjaP_PrNG 0.1
+SEND kQAJnMiLjtigazazggnR8Ed5r_imG_yHbD6hpxXNjaP_PrNG 0.2
+
+<b
+  0xcafebabe 32 u, // op
+  orders @ dict,
+b>

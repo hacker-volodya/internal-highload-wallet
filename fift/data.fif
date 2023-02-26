@@ -1,0 +1,8 @@
+"TonUtil.fif" include
+"Asm.fif" include
+
+"kQAJnMiLjtigazazggnR8Ed5r_imG_yHbD6hpxXNjaP_PrNG" parse-smc-addr drop 2=: admin-addr
+
+<b
+  admin-addr Addr,
+b>
